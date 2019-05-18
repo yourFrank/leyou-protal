@@ -97,7 +97,7 @@
 				created(){
                     ly.verifyUser().then(res => {
                         this.orderId=ly.getUrlParam("orderId");
-                        this.orderMoney=ly.getUrlParam("orderMoney");
+                        this.orderMoney=ly.getUrlParam("orderMoney")/1;
                         ly.http.get("/order/order/url/"+this.orderId).then(({data})=>{
                             var qrcode = new QRCode("qrcode", {
                                 text: data,

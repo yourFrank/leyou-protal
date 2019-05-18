@@ -163,7 +163,7 @@
                                             <li v-if="o.status === 2"><a href="#" class="sui-btn btn-info">提醒发货</a></li>
                                             <li v-if="o.status === 3"><a href="#" class="sui-btn btn-info">确认收货</a></li>
                                             <li v-if="o.status === 3">4天23时后自动确认</li>
-                                            <li><a href="javascript:void(0)">取消订单</a></li>
+                                            <li><a  @click="cancelOrder(o.orderId)">取消订单</a></li>
                                         </ul>
                                     </td>
                                 </tr>
@@ -295,12 +295,12 @@
 <script src="./js/vue/vue.js"></script>
 <script src="./js/axios.min.js"></script>
 <script src="./js/common.js"></script>
-<script src="./js/big.js"></script>
 <script src="./js/plugins/jquery/jquery.cookie.js"></script>
 <script type="text/javascript">
     var vm = new Vue({
         el: "#account",
         data: {
+            ly,
             user: {},
             orders:[],
             query:{
@@ -333,12 +333,38 @@
                 leyou.http.get("/auth/verify")
                     .then(resp => {
                         this.user = resp.data;
-                        window.location = "http://www.leyou.com/pay.html?orderId=" + id+"&&orderMoney="+price;
+                        window.location = "http://www.leyou.com/pay.html?orderId=" + id+"&&orderMoney="+price*100;
                     })
                     .catch(() => {
                         // 去登录
                         this.gotoLogin();
                     });
+            },
+            cancelOrder(id){
+               var r= confirm('此操作将删除该订单, 是否继续?');
+               if (r){
+
+                   leyou.http.get("/auth/verify")
+                       .then(resp => {
+                           this.user = resp.data;
+                           ly.http.delete("/order/order/"+id).then(()=>{
+                               alert("删除成功");
+                               this.loadOrder();
+                           }).catch(()=>{
+                               alert("删除失败");
+                           })
+
+                       }).catch(() => {
+                       // 去登录
+                       this.gotoLogin();
+                   });
+
+
+                }
+                else
+               {
+                    this.info("删除已取消！");
+                }
             },
 
             gotoLogin() {

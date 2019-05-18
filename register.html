@@ -80,8 +80,11 @@
                     <div class="controls">
                         <input type="text" placeholder="短信验证码" class="input-xfat input-xlarge" style="width: 120px;"
                                v-model="user.code" name="code" v-validate="'required'" data-vv-as="验证码">
-                        <span class="code-span" @click="createVerifyCode">
-                               获取短信验证码
+                        <span class="code-span" @click="createVerifyCode" v-if="!isDisabled">{{content}}
+
+                        </span>
+                        <span class="code-span"  v-if="isDisabled">{{content}}
+
                         </span>
                     </div>
                     <span style="color: red;">{{ errors.first('code') }}</span>
@@ -152,6 +155,12 @@
                 phone: '',
                 code: ''
             },
+            isDisabled: false, //控制按钮是否可以点击（false:可以点击，true:不可点击）
+            content: '获取短信验证码', // 发送验证码按钮的初始显示文字
+            timer: null,
+            count: '',
+            model: {},
+
             check: {
                 username: false
             }
@@ -183,14 +192,37 @@
             })
         },
         methods: {
-            createVerifyCode() {// 生成短信验证码
+            createVerifyCode() {
+                // 生成短信验证码
+                let vm = this;
                 this.$validator.validate("phone").then(r => {
                     if (r) {
                         leyou.http.post("/user/code", "phone=" + this.user.phone);
+                        const TIME_COUNT = 60;
+                        vm.count = TIME_COUNT;
+                        vm.timer = window.setInterval(() => {
+                            if (vm.count > 0 && vm.count <= TIME_COUNT){
+                                // 倒计时时不可点击
+                                vm.isDisabled = true;
+                                // 计时秒数
+                                vm.count--;
+                                // 更新按钮的文字内容
+                                vm.content = vm.count + 's后重新获取'
+                            } else {
+                                // 倒计时完，可点击
+                                vm.isDisabled = false;
+                                // 更新按钮文字内容
+                                vm.content = '获取短信验证码';
+                                // 清空定时器!!!
+                                clearInterval(vm.timer);
+                                vm.timer = null
+                            }
+                        }, 1000)
                     }
                 });
 
             },
+
             submit() {
                 this.$validator.validateAll().then(d => {
                     if (d) {

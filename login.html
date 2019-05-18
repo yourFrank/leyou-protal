@@ -49,6 +49,22 @@
                                 <input id="password" type="password" placeholder="请输入密码" class="span2 input-xfat"
                                     v-model="form.password">
                             </div>
+
+
+                                <div class="col-xs-12 pull_left">
+                                    <div class="form-group" >
+                                        <input class="form-control" type="tel" id="verify_input"  v-model="code" placeholder="请输入验证码" maxlength="4">
+
+                                    </div>
+                                    <div >
+                                        <a href="javascript:void(0);" title="点击更换验证码" >
+                                            <img id="imgVerify" src="" alt="更换验证码"   onclick="getVerify(this);">
+                                        </a>
+                                    </div>
+                                </div>
+
+
+
                             <div class="setting">
                                 <label class="checkbox inline">
                                     <input name="m1" type="checkbox" value="2" checked="">
@@ -98,6 +114,11 @@
 <script src="./js/axios.min.js"></script>
 <script src="./js/common.js"></script>
 <script type="text/javascript">
+
+    //获取验证码
+    function getVerify(obj){
+        obj.src = "http://api.leyou.com/api/auth/getVerify?"+Math.random();
+    }
     var loginVm = new Vue({
         el: "#loginApp",
         data: {
@@ -105,18 +126,31 @@
                 username:'',
                 password:''
             },
-            msg:''
+            msg:'',
+            code:''
+        },
+        created(){
+
+           var image= document.getElementById("imgVerify");
+           image.src="http://api.leyou.com/api/auth/getVerify?"+Math.random();
         },
         methods:{
             login(){
-                leyou.http.post("/auth/login",leyou.stringify(this.form))
+                leyou.http.post("/auth/checkVerify",this.code)
                     .then(resp => {
-                        if(resp.status === 204){
-                            const url = leyou.getUrlParam("returnUrl");
-                            window.location = url || 'http://www.leyou.com';
-                        }
+                            if (resp) {
+                                leyou.http.post("/auth/login", leyou.stringify(this.form))
+                                    .then(resp => {
+                                        if (resp.status === 204) {
+                                            const url = leyou.getUrlParam("returnUrl");
+                                            window.location = url || 'http://www.leyou.com';
+                                        }
+                                    })
+                                    .catch(() => this.msg = '用户名或密码错误')
+                            }
                     })
-                    .catch(() => this.msg = '用户名或密码错误')
+                    .catch(() => this.msg = '验证码错误')
+
             }
         }
     });
